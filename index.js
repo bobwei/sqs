@@ -168,16 +168,17 @@ module.exports = function(options) {
 
   var that = new events.EventEmitter();
 
-  that.push = function(name, message, callback) {
+  /*
+		Add params to queue.push arguments so that we can pass more options to SQS
+	*/
+  that.push = function(name, message, callback, params) {
     name = namespace + name;
 
     queueURL(name, function(url) {
       var body = options.raw ? message : JSON.stringify(message);
-      retry(
-        request,
-        queryURL('SendMessage', url, { MessageBody: body }),
-        callback,
-      );
+      var payload = Object.assign({}, { MessageBody: body }, params);
+      var url = queryURL('SendMessage', url, payload);
+      retry(request, url, callback);
     });
   };
 
